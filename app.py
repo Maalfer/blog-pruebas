@@ -218,7 +218,7 @@ def category_detail(cat_name):
     return render_template('category_detail.html', cat_name=cat_name, posts=posts)
 
 @app.route('/sobre-nosotros')
-def news():
+def about():
     with get_db_connection() as conn:
         posts = conn.execute('''
             SELECT id, title, content, author, category, image, date_created

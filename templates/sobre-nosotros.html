@@ -1,18 +1,72 @@
 {% extends "base.html" %}
-{% block title %}Contacto - Blog Oscuro{% endblock %}
+{% block title %}Sobre Nosotros - Blog de Ciberseguridad{% endblock %}
 {% block content %}
 
-<h1 class="text-red-glow mb-4">✉️ Contacto</h1>
+<div class="container py-5 about-page">
 
-<div class="card bg-dark-custom border-red-custom">
-  <div class="card-body">
-    <p class="text-white-50 mb-2">¿Tienes una pista, pregunta o propuesta?</p>
-    <p class="mb-0">
-      Escríbenos a
-      <a class="text-red-glow" href="mailto:contacto@tu-dominio.tld">contacto@tu-dominio.tld</a>
-      o usa nuestras redes seguras.
-    </p>
+  <!-- Sección 1 -->
+  <div class="row align-items-center mb-5">
+    <div class="col-md-6">
+      <h2 class="text-red-glow mb-4">🔒 Sobre Nosotros</h2>
+      <p class="text-secondary fs-5">
+        En <strong>Blog de Ciberseguridad</strong> analizamos, compartimos y divulgamos
+        información sobre las últimas amenazas digitales, vulnerabilidades, ataques
+        y tendencias en seguridad informática. Nuestro objetivo es construir una comunidad
+        donde el conocimiento y la inteligencia cibernética sean herramientas para
+        proteger el futuro digital.
+      </p>
+      <p class="text-secondary fs-5">
+        Desde investigación de amenazas avanzadas hasta formación en buenas prácticas
+        de seguridad, trabajamos para acercar la ciberseguridad a todos los niveles:
+        profesionales, empresas y entusiastas de la tecnología.
+      </p>
+    </div>
+    <div class="col-md-6 text-center">
+      <img src="{{ url_for('static', filename='img/about_1.jpg') }}" alt="Ciberseguridad investigación" class="img-fluid rounded shadow-lg about-img">
+    </div>
   </div>
+
+  <!-- Sección 2 -->
+  <div class="row align-items-center flex-md-row-reverse mb-5">
+    <div class="col-md-6">
+      <h2 class="text-red-glow mb-4">🌐 Nuestra Misión</h2>
+      <p class="text-secondary fs-5">
+        Nos dedicamos a promover la cultura de la ciberseguridad a través de análisis
+        técnicos, reportes de inteligencia y proyectos educativos abiertos. Creemos
+        que compartir información fortalece la defensa colectiva frente a las amenazas
+        digitales cada vez más sofisticadas.
+      </p>
+      <p class="text-secondary fs-5">
+        Nuestra comunidad se nutre de expertos en <em>ethical hacking</em>, ingeniería inversa,
+        análisis forense y seguridad en redes, que trabajan juntos para entender, anticipar
+        y mitigar los riesgos del ciberespacio.
+      </p>
+    </div>
+    <div class="col-md-6 text-center">
+      <img src="{{ url_for('static', filename='img/about_2.jpg') }}" alt="Equipo de seguridad cibernética" class="img-fluid rounded shadow-lg about-img">
+    </div>
+  </div>
+
+  <!-- Sección 3 -->
+  <div class="row align-items-center mb-5">
+    <div class="col-md-6">
+      <h2 class="text-red-glow mb-4">🧠 Comunidad y Colaboración</h2>
+      <p class="text-secondary fs-5">
+        Fomentamos un entorno colaborativo en el que los investigadores comparten hallazgos,
+        herramientas y estrategias para mejorar la seguridad global. Nuestra red está
+        abierta a la participación de nuevos profesionales interesados en aportar su
+        experiencia o aprender junto a nosotros.
+      </p>
+      <p class="text-secondary fs-5">
+        Si quieres colaborar o unirte al equipo, contáctanos a través de 
+        <a class="text-red-glow" href="{{ url_for('contact') }}">nuestra página de contacto</a>.
+      </p>
+    </div>
+    <div class="col-md-6 text-center">
+      <img src="{{ url_for('static', filename='img/about_3.jpg') }}" alt="Colaboración en seguridad" class="img-fluid rounded shadow-lg about-img">
+    </div>
+  </div>
+
 </div>
 
 {% endblock %}

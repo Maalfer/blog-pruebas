@@ -557,6 +557,98 @@ body.dark-theme {
 .capture-layout .post-item:nth-child(7) { grid-column: span 4; grid-row: span 1; min-height: 200px; }
 .capture-layout .post-item:nth-child(8) { grid-column: span 4; grid-row: span 1; min-height: 200px; }
 
+.about-page {
+    color: var(--text-primary);
+}
+
+.about-page h2 {
+    font-weight: 600;
+}
+
+.about-page p {
+    line-height: 1.8;
+}
+
+.about-img {
+    border: 2px solid var(--dark-border);
+    transition: all 0.4s ease;
+}
+
+.about-img:hover {
+    transform: scale(1.03);
+    box-shadow: 0 0 25px var(--red-shadow);
+    border-color: var(--red-primary);
+}
+
+.site-footer {
+    background-color: var(--darker-bg);
+    color: var(--text-primary);
+}
+
+.site-footer .footer-title {
+    font-weight: 700;
+    letter-spacing: .3px;
+    margin-bottom: .75rem;
+    color: var(--text-primary);
+}
+
+.site-footer .footer-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.site-footer .footer-list li + li {
+    margin-top: .35rem;
+}
+
+.site-footer .footer-link {
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: color .2s ease, text-shadow .2s ease;
+}
+
+.site-footer .footer-link:hover {
+    color: var(--red-glow);
+    text-shadow: 0 0 8px var(--red-shadow);
+}
+
+.site-footer .footer-brand {
+    line-height: 1.2;
+}
+
+.site-footer .footer-social .social-link {
+    width: 36px;
+    height: 36px;
+    border: 1px solid var(--dark-border);
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: var(--text-secondary);
+    transition: all .2s ease;
+    font-weight: 700;
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+
+.site-footer .footer-social .social-link:hover {
+    color: #fff;
+    border-color: var(--red-primary);
+    box-shadow: 0 0 12px var(--red-shadow);
+    background: linear-gradient(135deg, var(--red-primary), var(--red-dark));
+}
+
+.site-footer .footer-sep {
+    border-color: var(--dark-border);
+    opacity: 1;
+}
+
+@media (max-width: 768px) {
+    .site-footer .footer-brand span { font-size: 1.1rem; }
+}
+
+
 /* Responsive */
 @media (max-width: 768px) {
     .card:hover { transform: none; }
