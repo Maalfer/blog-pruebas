@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Blog Oscuro{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="alert alert-dark alert-red">
+            <h4 class="alert-heading text-red-glow">¡Bienvenido a la Oscuridad! 🌙</h4>
+            <p>Hola <strong class="text-red-glow">{{ username }}</strong>, has iniciado sesión correctamente en las sombras.</p>
+            <hr class="border-red-custom">
+            <p class="mb-0">Desde aquí puedes gestionar tus posts en la oscuridad...</p>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card glass-effect">
+            <div class="card-header bg-dark text-red-glow">
+                <h5 class="mb-0">👤 Información del Usuario</h5>
+            </div>
+            <div class="card-body">
+                <p><strong class="text-red-glow">Usuario:</strong> {{ username }}</p>
+                <p><strong class="text-red-glow">Posts publicados:</strong> <span class="badge bg-primary">{{ posts|length }}</span></p>
+                <p><strong class="text-red-glow">Estado:</strong> <span class="badge bg-primary">🟢 Activo en la Oscuridad</span></p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card glass-effect">
+            <div class="card-header bg-dark text-red-glow">
+                <h5 class="mb-0">⚡ Acciones Rápidas</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('create_post') }}" class="btn-red-solid">
+                        ✏️ Crear Nuevo Post
+                    </a>
+                    <a href="{{ url_for('home') }}" class="btn btn-outline-primary">🌙 Ver Blog</a>
+                    <a href="{{ url_for('logout') }}" class="btn btn-outline-danger">🚪 Cerrar Sesión</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Mis Posts -->
+<div class="row">
+    <div class="col-12">
+        <div class="card glass-effect">
+            <div class="card-header bg-dark text-red-glow d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">📝 Mis Posts ({{ posts|length }})</h5>
+            </div>
+            <div class="card-body">
+                {% if posts %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th class="text-red-glow">Título</th>
+                                <th class="text-red-glow">Categoría</th>
+                                <th class="text-red-glow">Fecha</th>
+                                <th class="text-red-glow">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for post in posts %}
+                            <tr>
+                                <td>
+                                    <a href="{{ url_for('view_post', post_id=post.id) }}" class="text-red-glow text-decoration-none">
+                                        {{ post.title }}
+                                    </a>
+                                </td>
+                                <td><span class="badge bg-primary">{{ post.category }}</span></td>
+                                <td class="text-muted-red">{{ post.date_created }}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{{ url_for('view_post', post_id=post.id) }}" class="btn btn-outline-primary">👁️ Ver</a>
+                                        <a href="{{ url_for('edit_post', post_id=post.id) }}" class="btn btn-outline-warning">✏️ Editar</a>
+                                        <a href="{{ url_for('delete_post', post_id=post.id) }}" class="btn btn-outline-danger" 
+                                           onclick="return confirm('¿Estás seguro de que quieres eliminar este post de la oscuridad?')">🗑️ Eliminar</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <p class="text-muted-red">🌑 No has creado ningún post en la oscuridad aún...</p>
+                    <a href="{{ url_for('create_post') }}" class="btn-red-solid">✏️ Crear mi primer post</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

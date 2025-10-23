@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}{{ post.title }} - Blog Oscuro{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <!-- Imagen hero del post -->
+        <div class="post-hero-image" 
+             style="background-image: url('{{ url_for('uploaded_file', filename=post.image) }}');">
+        </div>
+        
+        <article class="card glass-effect">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="badge bg-primary">{{ post.category }}</span>
+                    <small class="text-muted-red">{{ post.date_created }}</small>
+                </div>
+            </div>
+            <div class="card-body">
+                <h1 class="card-title display-6 text-red-glow">{{ post.title }}</h1>
+                
+                <div class="d-flex align-items-center mb-4">
+                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" 
+                         style="width: 40px; height: 40px;">
+                        {{ post.author[0]|upper }}
+                    </div>
+                    <div>
+                        <strong class="text-red-glow">{{ post.author }}</strong>
+                        <br>
+                        <small class="text-muted-red">👤 Autor en la Oscuridad</small>
+                    </div>
+                </div>
+                
+                <div class="post-content">
+                    {{ post.content|replace('\n', '<br>')|safe }}
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="d-flex justify-content-between align-items-center">
+                    <a href="{{ url_for('home') }}" class="btn btn-outline-secondary">
+                        ← Volver al Blog Oscuro
+                    </a>
+                    {% if session.user == post.author %}
+                    <div>
+                        <a href="{{ url_for('edit_post', post_id=post.id) }}" class="btn btn-warning btn-sm">✏️ Editar</a>
+                        <a href="{{ url_for('delete_post', post_id=post.id) }}" class="btn btn-danger btn-sm" 
+                           onclick="return confirm('¿Estás seguro de que quieres eliminar este post de la oscuridad?')">🗑️ Eliminar</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </article>
+    </div>
+</div>
+{% endblock %}

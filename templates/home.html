@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}Inicio - Blog Oscuro{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12 text-center mb-5">
+        <h1 class="display-4 mb-4 text-glow-animate">🌙 Blog Oscuro</h1>
+        <p class="lead">Donde las ideas brillan en la oscuridad ✨</p>
+        
+        {% if not session.user %}
+            <div class="mt-4">
+                <a href="{{ url_for('register') }}" class="btn-red-solid me-3">📝 Únete a la Oscuridad</a>
+                <a href="{{ url_for('login') }}" class="btn-red-outline">🔐 Iniciar Sesión</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Filtros por categoría -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card glass-effect">
+            <div class="card-body">
+                <h5 class="card-title text-red-glow">📂 Categorías</h5>
+                <div class="btn-group" role="group">
+                    <a href="{{ url_for('home') }}" class="btn btn-outline-secondary">Todas</a>
+                    {% set categories = [] %}
+                    {% for post in posts %}
+                        {% if post.category not in categories %}
+                            {% set _ = categories.append(post.category) %}
+                            <a href="#" class="btn btn-outline-secondary">{{ post.category }}</a>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Lista de posts -->
+<div class="row">
+    {% if posts %}
+        {% for post in posts %}
+        <div class="col-lg-6 col-md-12 mb-4">
+            <div class="card h-100 post-card-with-image">
+                <!-- Imagen de fondo -->
+                <div class="card-background" 
+                     style="background-image: url('{{ url_for('uploaded_file', filename=post.image) }}');">
+                </div>
+                
+                <!-- Contenido sobre la imagen -->
+                <div class="card-content">
+                    <div>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="badge bg-primary">{{ post.category }}</span>
+                            <small class="text-muted-red">{{ post.date_created }}</small>
+                        </div>
+                        
+                        <h5 class="card-title mb-3">{{ post.title }}</h5>
+                        
+                        <p class="card-text mb-4">
+                            {{ post.content[:120] }}{% if post.content|length > 120 %}...{% endif %}
+                        </p>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted-red">👤 {{ post.author }}</small>
+                        <a href="{{ url_for('view_post', post_id=post.id) }}" class="btn btn-outline-primary btn-sm">
+                            🔍 Leer más
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="col-12">
+            <div class="card glass-effect">
+                <div class="card-body text-center py-5">
+                    <h5 class="card-title text-red-glow">📭 No hay posts aún</h5>
+                    <p class="card-text text-muted-red">Sé el primero en publicar algo en la oscuridad...</p>
+                    {% if session.user %}
+                        <a href="{{ url_for('create_post') }}" class="btn-red-solid">✏️ Crear Primer Post</a>
+                    {% else %}
+                        <a href="{{ url_for('register') }}" class="btn-red-solid">📝 Regístrate para publicar</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Estadísticas -->
+<div class="row mt-5">
+    <div class="col-md-3 col-6 text-center">
+        <div class="card glass-effect">
+            <div class="card-body">
+                <h3 class="text-red-glow">{{ posts|length }}</h3>
+                <p class="mb-0 text-muted-red">📄 Posts</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6 text-center">
+        <div class="card glass-effect">
+            <div class="card-body">
+                <h3 class="text-red-glow">
+                    {% set authors = [] %}
+                    {% for post in posts %}
+                        {% if post.author not in authors %}
+                            {% set _ = authors.append(post.author) %}
+                        {% endif %}
+                    {% endfor %}
+                    {{ authors|length }}
+                </h3>
+                <p class="mb-0 text-muted-red">👥 Autores</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6 text-center">
+        <div class="card glass-effect">
+            <div class="card-body">
+                <h3 class="text-red-glow">
+                    {% set categories = [] %}
+                    {% for post in posts %}
+                        {% if post.category not in categories %}
+                            {% set _ = categories.append(post.category) %}
+                        {% endif %}
+                    {% endfor %}
+                    {{ categories|length }}
+                </h3>
+                <p class="mb-0 text-muted-red">📂 Categorías</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6 text-center">
+        <div class="card glass-effect">
+            <div class="card-body">
+                <h3 class="text-red-glow">{{ posts|length * 3 }}</h3>
+                <p class="mb-0 text-muted-red">❤️ Comunidad</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

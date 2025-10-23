@@ -1,0 +1,499 @@
+/* Variables de colores para el tema oscuro rojo */
+:root {
+    --dark-bg: #0a0a0a;
+    --darker-bg: #050505;
+    --dark-card: #1a1a1a;
+    --dark-border: #2a2a2a;
+    --red-primary: #dc3545;
+    --red-dark: #c82333;
+    --red-darker: #a71e2a;
+    --red-glow: #ff4757;
+    --red-shadow: rgba(220, 53, 69, 0.3);
+    --text-primary: #ffffff;
+    --text-secondary: #b0b0b0;
+    --text-muted: #888888;
+}
+
+/* Estilos generales */
+body.dark-theme {
+    background-color: var(--dark-bg);
+    color: var(--text-primary);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-image: 
+        radial-gradient(circle at 15% 50%, rgba(220, 53, 69, 0.03) 0%, transparent 50%),
+        radial-gradient(circle at 85% 30%, rgba(220, 53, 69, 0.03) 0%, transparent 50%);
+    min-height: 100vh;
+}
+
+/* Navbar personalizada */
+.bg-dark-custom {
+    background-color: var(--darker-bg) !important;
+    backdrop-filter: blur(10px);
+}
+
+.border-red-custom {
+    border-color: var(--red-darker) !important;
+}
+
+.brand-red {
+    color: var(--red-glow) !important;
+    font-size: 1.6rem;
+    text-shadow: 0 0 10px var(--red-shadow);
+}
+
+.brand-red:hover {
+    color: var(--red-primary) !important;
+}
+
+/* Botones personalizados */
+.btn-red-solid {
+    background: linear-gradient(135deg, var(--red-primary), var(--red-darker));
+    border: 1px solid var(--red-dark);
+    color: white !important;
+    border-radius: 8px;
+    padding: 8px 20px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    font-weight: 500;
+}
+
+.btn-red-solid:hover {
+    background: linear-gradient(135deg, var(--red-dark), var(--red-primary));
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px var(--red-shadow);
+    color: white !important;
+}
+
+.btn-red-outline {
+    border: 2px solid var(--red-primary);
+    color: var(--red-primary) !important;
+    border-radius: 8px;
+    padding: 6px 18px;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    font-weight: 500;
+    background: transparent;
+}
+
+.btn-red-outline:hover {
+    background: var(--red-primary);
+    color: white !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px var(--red-shadow);
+}
+
+/* Cards personalizadas */
+.card {
+    background-color: var(--dark-card);
+    border: 1px solid var(--dark-border);
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+    color: var(--text-primary);
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 30px rgba(220, 53, 69, 0.2);
+    border-color: var(--red-dark);
+}
+
+.card-header {
+    background: linear-gradient(135deg, var(--dark-card), #252525) !important;
+    border-bottom: 1px solid var(--red-darker);
+    font-weight: 600;
+}
+
+/* Post cards especiales */
+.post-card {
+    border-left: 4px solid var(--red-primary);
+    background: linear-gradient(135deg, var(--dark-card), #1f1f1f);
+}
+
+.post-card:hover {
+    border-left-color: var(--red-glow);
+    box-shadow: 0 8px 30px var(--red-shadow);
+}
+
+/* Textos con glow rojo */
+.text-red-glow {
+    color: var(--red-glow) !important;
+    text-shadow: 0 0 10px var(--red-shadow);
+}
+
+.text-muted-red {
+    color: var(--text-muted) !important;
+}
+
+/* Badges personalizados */
+.badge {
+    font-weight: 500;
+    border-radius: 6px;
+}
+
+.bg-primary {
+    background: linear-gradient(135deg, var(--red-primary), var(--red-darker)) !important;
+    border: 1px solid var(--red-dark);
+}
+
+/* Alertas personalizadas */
+.alert-red {
+    border: 1px solid var(--red-dark);
+    border-left: 4px solid var(--red-primary);
+    background: linear-gradient(135deg, #1a1a1a, #252525);
+    color: var(--text-primary);
+    border-radius: 8px;
+}
+
+.alert-success {
+    border-left: 4px solid #28a745;
+}
+
+.alert-danger {
+    border-left: 4px solid var(--red-primary);
+}
+
+.alert-warning {
+    border-left: 4px solid #ffc107;
+}
+
+/* Tablas personalizadas */
+.table {
+    color: var(--text-primary);
+    border-color: var(--dark-border);
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: var(--text-primary);
+}
+
+.table th {
+    border-bottom: 2px solid var(--red-dark);
+    background-color: var(--darker-bg);
+    font-weight: 600;
+}
+
+.table td {
+    border-color: var(--dark-border);
+}
+
+/* Dropdown personalizado */
+.dropdown-menu-dark {
+    background: linear-gradient(135deg, var(--dark-card), #252525);
+    border: 1px solid var(--red-darker);
+    border-radius: 8px;
+}
+
+.dropdown-red .dropdown-item {
+    color: var(--text-primary);
+    transition: all 0.2s ease;
+}
+
+.dropdown-red .dropdown-item:hover {
+    background: linear-gradient(135deg, var(--red-primary), var(--red-darker));
+    color: white;
+}
+
+/* Formularios personalizados */
+.form-control {
+    background-color: var(--darker-bg);
+    border: 1px solid var(--dark-border);
+    color: var(--text-primary);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    background-color: var(--darker-bg);
+    border-color: var(--red-primary);
+    color: var(--text-primary);
+    box-shadow: 0 0 0 0.2rem var(--red-shadow);
+}
+
+.form-label {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.form-text {
+    color: var(--text-muted) !important;
+}
+
+/* Botones de formulario */
+.btn-primary {
+    background: linear-gradient(135deg, var(--red-primary), var(--red-darker));
+    border: 1px solid var(--red-dark);
+    color: white;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, var(--red-dark), var(--red-primary));
+    border-color: var(--red-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px var(--red-shadow);
+}
+
+.btn-outline-primary {
+    border: 2px solid var(--red-primary);
+    color: var(--red-primary);
+    background: transparent;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-primary:hover {
+    background: var(--red-primary);
+    border-color: var(--red-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px var(--red-shadow);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #28a745, #1e7e34);
+    border: 1px solid #1e7e34;
+    border-radius: 8px;
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, #ffc107, #e0a800);
+    border: 1px solid #e0a800;
+    color: #212529;
+    border-radius: 8px;
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, var(--red-primary), var(--red-darker));
+    border: 1px solid var(--red-dark);
+    border-radius: 8px;
+}
+
+/* Display headings */
+.display-4 {
+    color: var(--text-primary);
+    font-weight: 300;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.lead {
+    color: var(--text-secondary);
+    font-size: 1.25rem;
+}
+
+/* Contenido de posts */
+.post-content {
+    line-height: 1.8;
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+}
+
+.post-content br {
+    margin-bottom: 1rem;
+}
+
+/* Efectos de glassmorphism */
+.glass-effect {
+    background: rgba(26, 26, 26, 0.8);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(220, 53, 69, 0.2);
+}
+
+/* Animaciones sutiles */
+@keyframes glow {
+    0%, 100% { text-shadow: 0 0 5px var(--red-shadow); }
+    50% { text-shadow: 0 0 15px var(--red-glow), 0 0 20px var(--red-shadow); }
+}
+
+.text-glow-animate {
+    animation: glow 2s ease-in-out infinite;
+}
+
+/* Scrollbar personalizado */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--dark-bg);
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, var(--red-primary), var(--red-darker));
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, var(--red-dark), var(--red-primary));
+}
+
+/* Estilos para posts con imágenes de fondo */
+.post-card-with-image {
+    position: relative;
+    overflow: hidden;
+    min-height: 300px;
+    background: linear-gradient(135deg, rgba(26, 26, 26, 0.9), rgba(42, 42, 42, 0.8));
+}
+
+.post-card-with-image .card-background {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    transition: all 0.5s ease;
+    z-index: 1;
+}
+
+.post-card-with-image .card-content {
+    position: relative;
+    z-index: 2;
+    background: linear-gradient(135deg, 
+        rgba(10, 10, 10, 0.85) 0%, 
+        rgba(10, 10, 10, 0.7) 50%, 
+        rgba(10, 10, 10, 0.9) 100%);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.post-card-with-image:hover .card-background {
+    transform: scale(1.1);
+    filter: brightness(0.8) contrast(1.1);
+}
+
+.post-card-with-image:hover .card-content {
+    background: linear-gradient(135deg, 
+        rgba(220, 53, 69, 0.1) 0%, 
+        rgba(10, 10, 10, 0.8) 50%, 
+        rgba(10, 10, 10, 0.95) 100%);
+}
+
+/* Efecto de overlay rojo al hover */
+.post-card-with-image::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, 
+        rgba(220, 53, 69, 0) 0%, 
+        rgba(220, 53, 69, 0.1) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 2;
+}
+
+.post-card-with-image:hover::before {
+    opacity: 1;
+}
+
+/* Mejoras para el texto sobre imágenes */
+.post-card-with-image .card-title {
+    color: #ffffff;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    font-weight: 600;
+}
+
+.post-card-with-image .card-text {
+    color: #e0e0e0;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.post-card-with-image .badge {
+    background: linear-gradient(135deg, var(--red-primary), var(--red-darker));
+    border: 1px solid var(--red-dark);
+    text-shadow: none;
+}
+
+/* Estilos para el formulario de imagen */
+.image-preview {
+    width: 100%;
+    max-height: 200px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 2px solid var(--dark-border);
+    margin-bottom: 1rem;
+}
+
+.form-image-upload {
+    border: 2px dashed var(--red-dark);
+    border-radius: 8px;
+    padding: 1.5rem;
+    text-align: center;
+    background: rgba(220, 53, 69, 0.05);
+    transition: all 0.3s ease;
+}
+
+.form-image-upload:hover {
+    border-color: var(--red-primary);
+    background: rgba(220, 53, 69, 0.1);
+}
+
+/* Mejoras para la vista individual de post */
+.post-hero-image {
+    width: 100%;
+    height: 400px;
+    background-size: cover;
+    background-position: center;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    position: relative;
+}
+
+.post-hero-image::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 50%;
+    background: linear-gradient(transparent, var(--dark-bg));
+    border-radius: 12px;
+}
+
+/* Responsive para imágenes */
+@media (max-width: 768px) {
+    .post-card-with-image {
+        min-height: 250px;
+    }
+    
+    .post-hero-image {
+        height: 250px;
+    }
+}
+
+/* Animación de carga para imágenes */
+.image-loading {
+    background: linear-gradient(90deg, var(--dark-border) 25%, var(--dark-card) 50%, var(--dark-border) 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .card:hover {
+        transform: none;
+    }
+    
+    .btn-red-solid,
+    .btn-red-outline {
+        padding: 6px 12px;
+        font-size: 0.9rem;
+    }
+}

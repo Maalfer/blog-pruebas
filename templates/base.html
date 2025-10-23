@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Mi Blog Oscuro{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="dark-theme">
+    <!-- Header -->
+    <header class="bg-dark-custom border-bottom border-red-custom">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark-custom">
+            <div class="container">
+                <a class="navbar-brand brand-red" href="{{ url_for('home') }}">
+                    <strong>📝 Blog Oscuro</strong>
+                </a>
+                
+                <div class="navbar-nav ms-auto">
+                    {% if session.user %}
+                        <!-- Usuario autenticado -->
+                        <div class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-red-glow" href="#" role="button" data-bs-toggle="dropdown">
+                                👤 {{ session.user }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-dark dropdown-red">
+                                <li><a class="dropdown-item" href="{{ url_for('dashboard') }}">📊 Dashboard</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('create_post') }}">✏️ Nuevo Post</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-red-glow" href="{{ url_for('logout') }}">🚪 Cerrar Sesión</a></li>
+                            </ul>
+                        </div>
+                    {% else %}
+                        <!-- Usuario no autenticado -->
+                        <a class="nav-link btn-red-outline me-2" href="{{ url_for('login') }}">🔐 Iniciar Sesión</a>
+                        <a class="nav-link btn-red-solid" href="{{ url_for('register') }}">📝 Registrarse</a>
+                    {% endif %}
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Contenido principal -->
+    <main class="container my-4">
+        <!-- Mensajes flash -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'danger' else 'dark' if category == 'warning' else 'dark' }} alert-dismissible fade show alert-red" role="alert">
+                        {% if category == 'success' %} ✅ {% elif category == 'danger' %} ❌ {% elif category == 'warning' %} ⚠️ {% else %} ℹ️ {% endif %}
+                        {{ message }}
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-dark-custom text-red-glow text-center py-4 mt-5 border-top border-red-custom">
+        <div class="container">
+            <p class="mb-0">🌙 <strong>Blog Oscuro</strong> - Donde las ideas brillan en la oscuridad ✨</p>
+            <small class="text-muted-red">© 2024 Todos los derechos reservados</small>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
