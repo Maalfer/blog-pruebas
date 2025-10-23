@@ -132,6 +132,29 @@ def home():
         
         return render_template('home.html', posts=posts_list)
 
+@app.route('/latest-publications')
+def latest_publications():
+    with get_db_connection() as conn:
+        posts = conn.execute('''
+            SELECT * FROM posts 
+            ORDER BY date_created DESC 
+            LIMIT 4
+        ''').fetchall()
+        
+        posts_list = []
+        for post in posts:
+            posts_list.append({
+                'id': post['id'],
+                'title': post['title'],
+                'content': post['content'],
+                'author': post['author'],
+                'category': post['category'],
+                'image': post['image'],
+                'date_created': post['date_created']
+            })
+        
+        return render_template('latest_publications.html', posts=posts_list)
+
 @app.route('/post/<int:post_id>')
 def view_post(post_id):
     with get_db_connection() as conn:

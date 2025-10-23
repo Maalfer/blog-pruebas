@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Latest Publications - Blog Oscuro{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="text-red-glow mb-4">📢 Latest Publications</h1>
+        <p class="text-muted-red mb-4">Las 4 publicaciones más recientes del blog</p>
+    </div>
+</div>
+
+<div class="row">
+    {% for post in posts %}
+    <div class="col-md-6 col-lg-3 mb-4">
+        <div class="card bg-dark-custom border-red-custom h-100 post-card">
+            {% if post.image %}
+            <img src="{{ url_for('uploaded_file', filename=post.image) }}" 
+                 class="card-img-top post-image" 
+                 alt="{{ post.title }}"
+                 style="height: 200px; object-fit: cover;">
+            {% else %}
+            <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" 
+                 style="height: 200px;">
+                <span class="text-muted">No image</span>
+            </div>
+            {% endif %}
+            
+            <div class="card-body d-flex flex-column">
+                <h5 class="card-title text-red-glow">{{ post.title }}</h5>
+                <p class="card-text text-white flex-grow-1">
+                    {{ post.content[:100] }}{% if post.content|length > 100 %}...{% endif %}
+                </p>
+                <div class="mt-auto">
+                    <small class="text-muted-red">Por: {{ post.author }}</small><br>
+                    <small class="text-muted-red">{{ post.date_created[:10] }}</small>
+                    <a href="{{ url_for('view_post', post_id=post.id) }}" 
+                       class="btn btn-red-outline btn-sm mt-2 w-100">
+                        Leer más
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12">
+        <div class="text-center py-5">
+            <h4 class="text-muted-red">No hay publicaciones disponibles</h4>
+            <p class="text-muted">¡Sé el primero en publicar!</p>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="row mt-4">
+    <div class="col-12 text-center">
+        <a href="{{ url_for('home') }}" class="btn btn-red-solid">
+            📚 Ver todas las publicaciones
+        </a>
+    </div>
+</div>
+{% endblock %}

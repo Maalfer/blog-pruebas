@@ -16,25 +16,77 @@
                     <strong>📝 Blog Oscuro</strong>
                 </a>
                 
-                <div class="navbar-nav ms-auto">
-                    {% if session.user %}
-                        <!-- Usuario autenticado -->
-                        <div class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle text-red-glow" href="#" role="button" data-bs-toggle="dropdown">
-                                👤 {{ session.user }}
+                <!-- Botón para menú móvil -->
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                
+                <!-- Menú de navegación -->
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item">
+                            <a class="nav-link text-red-glow" href="{{ url_for('latest_publications') }}">
+                                📢 Latest Publications
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-dark dropdown-red">
-                                <li><a class="dropdown-item" href="{{ url_for('dashboard') }}">📊 Dashboard</a></li>
-                                <li><a class="dropdown-item" href="{{ url_for('create_post') }}">✏️ Nuevo Post</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item text-red-glow" href="{{ url_for('logout') }}">🚪 Cerrar Sesión</a></li>
-                            </ul>
-                        </div>
-                    {% else %}
-                        <!-- Usuario no autenticado -->
-                        <a class="nav-link btn-red-outline me-2" href="{{ url_for('login') }}">🔐 Iniciar Sesión</a>
-                        <a class="nav-link btn-red-solid" href="{{ url_for('register') }}">📝 Registrarse</a>
-                    {% endif %}
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-red-glow" href="#">
+                                🎧 CPR Podcast Channel
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-red-glow" href="#">
+                                🔒 Web 3.0 Security
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-red-glow" href="#">
+                                📊 Intelligence Reports
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-red-glow" href="#">
+                                📚 Resources
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-red-glow" href="#">
+                                👥 About Us
+                            </a>
+                        </li>
+                    </ul>
+                    
+                    <!-- Botón SUBSCRIBE -->
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item">
+                            <a class="nav-link btn-red-solid" href="#">
+                                📧 SUBSCRIBE
+                            </a>
+                        </li>
+                        
+                        {% if session.user %}
+                            <!-- Usuario autenticado -->
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle text-red-glow" href="#" role="button" data-bs-toggle="dropdown">
+                                    👤 {{ session.user }}
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-dark dropdown-red">
+                                    <li><a class="dropdown-item" href="{{ url_for('dashboard') }}">📊 Dashboard</a></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('create_post') }}">✏️ Nuevo Post</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-red-glow" href="{{ url_for('logout') }}">🚪 Cerrar Sesión</a></li>
+                                </ul>
+                            </li>
+                        {% else %}
+                            <!-- Usuario no autenticado -->
+                            <li class="nav-item">
+                                <a class="nav-link btn-red-outline me-2" href="{{ url_for('login') }}">🔐 Iniciar Sesión</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link btn-red-solid" href="{{ url_for('register') }}">📝 Registrarse</a>
+                            </li>
+                        {% endif %}
+                    </ul>
                 </div>
             </div>
         </nav>
