@@ -104,11 +104,22 @@ def uploaded_file(filename):
 
 @app.route('/')
 def home():
+    q = request.args.get('q', '', type=str).strip()
     with get_db_connection() as conn:
-        posts = conn.execute('''
-            SELECT * FROM posts 
-            ORDER BY date_created DESC
-        ''').fetchall()
+        if q:
+            like = f"%{q.lower()}%"
+            posts = conn.execute('''
+                SELECT id, title, content, author, category, image, date_created
+                FROM posts
+                WHERE LOWER(title) LIKE ? OR LOWER(content) LIKE ? OR LOWER(category) LIKE ?
+                ORDER BY date_created DESC
+            ''', (like, like, like)).fetchall()
+        else:
+            posts = conn.execute('''
+                SELECT id, title, content, author, category, image, date_created
+                FROM posts
+                ORDER BY date_created DESC
+            ''').fetchall()
         posts_list = []
         for post in posts:
             posts_list.append({
@@ -120,7 +131,38 @@ def home():
                 'image': post['image'],
                 'date_created': post['date_created']
             })
-        return render_template('home.html', posts=posts_list)
+        return render_template('home.html', posts=posts_list, q=q)
+
+@app.route('/search')
+def search():
+    q = request.args.get('q', '', type=str).strip()
+    with get_db_connection() as conn:
+        if q:
+            like = f"%{q.lower()}%"
+            posts = conn.execute('''
+                SELECT id, title, content, author, category, image, date_created
+                FROM posts
+                WHERE LOWER(title) LIKE ? OR LOWER(content) LIKE ? OR LOWER(category) LIKE ?
+                ORDER BY date_created DESC
+            ''', (like, like, like)).fetchall()
+        else:
+            posts = conn.execute('''
+                SELECT id, title, content, author, category, image, date_created
+                FROM posts
+                ORDER BY date_created DESC
+            ''').fetchall()
+    posts_list = []
+    for p in posts:
+        posts_list.append({
+            'id': p['id'],
+            'title': p['title'],
+            'content': p['content'],
+            'author': p['author'],
+            'category': p['category'],
+            'image': p['image'],
+            'date_created': p['date_created']
+        })
+    return render_template('partials/_posts_grid.html', posts=posts_list)
 
 @app.route('/latest-publications')
 def latest_publications():
@@ -175,7 +217,7 @@ def category_detail(cat_name):
         return render_template('category_empty.html', cat_name=cat_name), 404
     return render_template('category_detail.html', cat_name=cat_name, posts=posts)
 
-@app.route('/noticias')
+@app.route('/sobre-nosotros')
 def news():
     with get_db_connection() as conn:
         posts = conn.execute('''
@@ -184,7 +226,7 @@ def news():
             WHERE LOWER(category) = 'noticias'
             ORDER BY date_created DESC
         ''').fetchall()
-    return render_template('news.html', posts=posts)
+    return render_template('sobre-nosotros.html', posts=posts)
 
 @app.route('/contacto')
 def contact():

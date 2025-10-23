@@ -5,88 +5,26 @@
 {% block content %}
 <div class="row">
     <div class="col-12 text-center mb-5">
-        <h1 class="display-4 mb-4 text-glow-animate">🛡️ Blog de Ciberseguridad</h1>
+        <div class="d-flex flex-column flex-md-row align-items-center justify-content-center gap-3">
+            <h1 class="display-5 m-0 text-glow-animate">🛡️ Blog de Ciberseguridad</h1>
+            <form class="d-flex" role="search" method="get" action="{{ url_for('home') }}" id="search-form" style="max-width: 520px; width: 100%;">
+                <input
+                    class="form-control me-2"
+                    id="q"
+                    name="q"
+                    type="search"
+                    placeholder="Buscar por título, descripción o categoría..."
+                    aria-label="Buscar"
+                    value="{{ q|default('') }}"
+                    autocomplete="off"
+                >
+                <button class="btn btn-outline-primary" type="submit">Buscar</button>
+            </form>
+        </div>
+        
     </div>
 </div>
 
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="card glass-effect">
-            <div class="card-body">
-                <h5 class="card-title text-red-glow">📂 Categorías</h5>
-                <div class="btn-group" role="group">
-                    <a href="{{ url_for('home') }}" class="btn btn-outline-secondary">Todas</a>
-                    {% set categories = [] %}
-                    {% for post in posts %}
-                        {% if post.category not in categories %}
-                            {% set _ = categories.append(post.category) %}
-                            <a href="{{ url_for('category_detail', cat_name=post.category) }}" class="btn btn-outline-secondary">{{ post.category }}</a>
-                        {% endif %}
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="post-grid capture-layout">
-    {% if posts %}
-        {% for post in posts %}
-        <div class="post-item post-card-with-image 
-            {% if loop.index == 1 %}post-card-featured
-            {% elif loop.index <= 3 %}post-card-standard
-            {% else %}post-card-compact{% endif %}">
-            <div class="card-background" 
-                 style="background-image: url('{{ url_for('uploaded_file', filename=post.image) }}');">
-            </div>
-            <div class="card-content">
-                <div>
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <a class="badge bg-primary text-decoration-none" href="{{ url_for('category_detail', cat_name=post.category) }}">{{ post.category }}</a>
-                        <small class="post-date">{{ post.date_created[:10] }}</small>
-                    </div>
-                    <h5 class="card-title mb-3">
-                        {{ post.title }}
-                    </h5>
-                    {% if loop.index == 1 %}
-                    <p class="post-excerpt mb-4">
-                        {{ post.content[:200] }}{% if post.content|length > 200 %}...{% endif %}
-                    </p>
-                    {% elif loop.index <= 3 %}
-                    <p class="post-excerpt mb-3">
-                        {{ post.content[:120] }}{% if post.content|length > 120 %}...{% endif %}
-                    </p>
-                    {% else %}
-                    <p class="post-excerpt mb-2">
-                        {{ post.content[:80] }}{% if post.content|length > 80 %}...{% endif %}
-                    </p>
-                    {% endif %}
-                </div>
-                <div class="d-flex justify-content-between align-items-center">
-                    <small class="post-author">{{ post.author }}</small>
-                    <a href="{{ url_for('view_post', post_id=post.id) }}" class="btn btn-outline-primary btn-sm">
-                        🔍 Leer más
-                    </a>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-    {% else %}
-        <div class="col-12">
-            <div class="card glass-effect">
-                <div class="card-body text-center py-5">
-                    <h5 class="card-title text-red-glow">📭 No hay posts aún</h5>
-                    <p class="card-text text-muted-red">Sé el primero en publicar algo en la oscuridad...</p>
-                    {% if session.user %}
-                        <a href="{{ url_for('create_post') }}" class="btn-red-solid">✏️ Crear Primer Post</a>
-                    {% else %}
-                        <a href="{{ url_for('register') }}" class="btn-red-solid">📝 Regístrate para publicar</a>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    {% endif %}
-</div>
 
 <div class="row mt-5">
     <div class="col-md-3 col-6 text-center">
@@ -117,13 +55,13 @@
         <div class="card glass-effect">
             <div class="card-body">
                 <h3 class="text-red-glow">
-                    {% set categories = [] %}
+                    {% set cats = [] %}
                     {% for post in posts %}
-                        {% if post.category not in categories %}
-                            {% set _ = categories.append(post.category) %}
+                        {% if post.category not in cats %}
+                            {% set _ = cats.append(post.category) %}
                         {% endif %}
                     {% endfor %}
-                    {{ categories|length }}
+                    {{ cats|length }}
                 </h3>
                 <p class="mb-0 text-muted-red">📂 Categorías</p>
             </div>
@@ -138,4 +76,47 @@
         </div>
     </div>
 </div>
+
+<div id="posts-grid">
+    {% include 'partials/_posts_grid.html' %}
+</div>
+
+
+<script>
+(function() {
+    const input = document.getElementById('q');
+    const grid = document.getElementById('posts-grid');
+    const form = document.getElementById('search-form');
+
+    let t = null;
+
+    function update(q) {
+        const url = new URL('{{ url_for("search") }}', window.location.origin);
+        if (q) url.searchParams.set('q', q);
+        fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(r => r.text())
+            .then(html => { grid.innerHTML = html; })
+            .catch(() => {});
+    }
+
+    input.addEventListener('input', function() {
+        const q = this.value.trim();
+        if (t) clearTimeout(t);
+        t = setTimeout(() => update(q), 300);
+    });
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        update(input.value.trim());
+        const params = new URLSearchParams(window.location.search);
+        if (input.value.trim()) {
+            params.set('q', input.value.trim());
+        } else {
+            params.delete('q');
+        }
+        const newUrl = `${window.location.pathname}?${params.toString()}`;
+        window.history.replaceState({}, '', newUrl);
+    });
+})();
+</script>
 {% endblock %}

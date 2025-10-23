@@ -1,0 +1,53 @@
+<div class="post-grid capture-layout">
+    {% if posts %}
+        {% for post in posts %}
+        <div class="post-item post-card-with-image 
+            {% if loop.index == 1 %}post-card-featured
+            {% elif loop.index <= 3 %}post-card-standard
+            {% else %}post-card-compact{% endif %}">
+            <div class="card-background" 
+                 style="background-image: url('{{ url_for('uploaded_file', filename=post.image) }}');">
+            </div>
+            <div class="card-content">
+                <div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <a class="badge bg-primary text-decoration-none" href="{{ url_for('category_detail', cat_name=post.category) }}">{{ post.category }}</a>
+                        <small class="post-date">{{ post.date_created[:10] }}</small>
+                    </div>
+                    <h5 class="card-title mb-3">
+                        {{ post.title }}
+                    </h5>
+                    {% if loop.index == 1 %}
+                    <p class="post-excerpt mb-4">
+                        {{ post.content[:200] }}{% if post.content|length > 200 %}...{% endif %}
+                    </p>
+                    {% elif loop.index <= 3 %}
+                    <p class="post-excerpt mb-3">
+                        {{ post.content[:120] }}{% if post.content|length > 120 %}...{% endif %}
+                    </p>
+                    {% else %}
+                    <p class="post-excerpt mb-2">
+                        {{ post.content[:80] }}{% if post.content|length > 80 %}...{% endif %}
+                    </p>
+                    {% endif %}
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <small class="post-author">{{ post.author }}</small>
+                    <a href="{{ url_for('view_post', post_id=post.id) }}" class="btn btn-outline-primary btn-sm">
+                        🔍 Leer más
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="col-12">
+            <div class="card glass-effect">
+                <div class="card-body text-center py-5">
+                    <h5 class="card-title text-red-glow">📭 No hay resultados</h5>
+                    <p class="card-text text-muted-red">Prueba con otro término de búsqueda.</p>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
