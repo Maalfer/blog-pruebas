@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Noticias - Blog Oscuro{% endblock %}
+{% block content %}
+
+<h1 class="text-red-glow mb-4">📰 Noticias</h1>
+<p class="text-muted-red">Publicaciones clasificadas como “Noticias”.</p>
+
+<div class="row">
+  {% for post in posts %}
+  <div class="col-md-6 col-lg-4 mb-4">
+    <div class="card bg-dark-custom border-red-custom h-100">
+      {% if post.image %}
+        <img src="{{ url_for('uploaded_file', filename=post.image) }}" class="card-img-top" alt="{{ post.title }}" style="height: 200px; object-fit: cover;">
+      {% endif %}
+      <div class="card-body d-flex flex-column">
+        <span class="badge bg-primary mb-2">{{ post.category }}</span>
+        <h5 class="card-title text-red-glow">{{ post.title }}</h5>
+        <p class="card-text text-white-50">{{ post.content[:120] }}{% if post.content|length > 120 %}...{% endif %}</p>
+        <div class="mt-auto d-flex justify-content-between align-items-center">
+          <small class="text-muted-red">{{ post.author }}</small>
+          <a href="{{ url_for('view_post', post_id=post.id) }}" class="btn btn-outline-primary btn-sm">🔍 Leer</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="col-12">
+    <div class="card bg-dark-custom border-red-custom">
+      <div class="card-body">
+        <p class="mb-0 text-muted-red">No hay noticias publicadas.</p>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% endblock %}

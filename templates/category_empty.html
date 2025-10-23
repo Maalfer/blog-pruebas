@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}Categoría vacía{% endblock %}
+{% block content %}
+<h1 class="text-red-glow">📁 {{ cat_name }}</h1>
+<p class="text-muted-red">No hay publicaciones en esta categoría (aún).</p>
+<a href="{{ url_for('categories') }}" class="btn btn-outline-primary">← Volver a Categorías</a>
+{% endblock %}

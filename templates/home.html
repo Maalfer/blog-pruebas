@@ -1,23 +1,14 @@
 {% extends "base.html" %}
 
-{% block title %}Inicio - Blog Oscuro{% endblock %}
+{% block title %}Inicio - Blog de Ciberseguridad{% endblock %}
 
 {% block content %}
 <div class="row">
     <div class="col-12 text-center mb-5">
-        <h1 class="display-4 mb-4 text-glow-animate">🌙 Blog Oscuro</h1>
-        <p class="lead">Donde las ideas brillan en la oscuridad ✨</p>
-        
-        {% if not session.user %}
-            <div class="mt-4">
-                <a href="{{ url_for('register') }}" class="btn-red-solid me-3">📝 Únete a la Oscuridad</a>
-                <a href="{{ url_for('login') }}" class="btn-red-outline">🔐 Iniciar Sesión</a>
-            </div>
-        {% endif %}
+        <h1 class="display-4 mb-4 text-glow-animate">🛡️ Blog de Ciberseguridad</h1>
     </div>
 </div>
 
-<!-- Filtros por categoría -->
 <div class="row mb-4">
     <div class="col-12">
         <div class="card glass-effect">
@@ -29,7 +20,7 @@
                     {% for post in posts %}
                         {% if post.category not in categories %}
                             {% set _ = categories.append(post.category) %}
-                            <a href="#" class="btn btn-outline-secondary">{{ post.category }}</a>
+                            <a href="{{ url_for('category_detail', cat_name=post.category) }}" class="btn btn-outline-secondary">{{ post.category }}</a>
                         {% endif %}
                     {% endfor %}
                 </div>
@@ -38,7 +29,6 @@
     </div>
 </div>
 
-<!-- Grid de posts asimétrico -->
 <div class="post-grid capture-layout">
     {% if posts %}
         {% for post in posts %}
@@ -46,24 +36,18 @@
             {% if loop.index == 1 %}post-card-featured
             {% elif loop.index <= 3 %}post-card-standard
             {% else %}post-card-compact{% endif %}">
-            
-            <!-- Imagen de fondo -->
             <div class="card-background" 
                  style="background-image: url('{{ url_for('uploaded_file', filename=post.image) }}');">
             </div>
-            
-            <!-- Contenido sobre la imagen -->
             <div class="card-content">
                 <div>
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="badge bg-primary">{{ post.category }}</span>
+                        <a class="badge bg-primary text-decoration-none" href="{{ url_for('category_detail', cat_name=post.category) }}">{{ post.category }}</a>
                         <small class="post-date">{{ post.date_created[:10] }}</small>
                     </div>
-                    
                     <h5 class="card-title mb-3">
                         {{ post.title }}
                     </h5>
-                    
                     {% if loop.index == 1 %}
                     <p class="post-excerpt mb-4">
                         {{ post.content[:200] }}{% if post.content|length > 200 %}...{% endif %}
@@ -78,7 +62,6 @@
                     </p>
                     {% endif %}
                 </div>
-                
                 <div class="d-flex justify-content-between align-items-center">
                     <small class="post-author">{{ post.author }}</small>
                     <a href="{{ url_for('view_post', post_id=post.id) }}" class="btn btn-outline-primary btn-sm">
@@ -105,7 +88,6 @@
     {% endif %}
 </div>
 
-<!-- Estadísticas -->
 <div class="row mt-5">
     <div class="col-md-3 col-6 text-center">
         <div class="card glass-effect">

@@ -3,69 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Mi Blog Oscuro{% endblock %}</title>
+    <title>{% block title %}Blog de Ciberseguridad{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body class="dark-theme">
-    <!-- Header -->
     <header class="bg-dark-custom border-bottom border-red-custom">
         <nav class="navbar navbar-expand-lg navbar-dark bg-dark-custom">
             <div class="container">
                 <a class="navbar-brand brand-red" href="{{ url_for('home') }}">
-                    <strong>📝 Blog Oscuro</strong>
+                    <strong>📝 Blog de Ciberseguridad</strong>
                 </a>
-                
-                <!-- Botón para menú móvil -->
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                
-                <!-- Menú de navegación -->
                 <div class="collapse navbar-collapse" id="navbarNav">
                     <ul class="navbar-nav me-auto">
                         <li class="nav-item">
-                            <a class="nav-link text-red-glow" href="{{ url_for('latest_publications') }}">
+                            <a class="nav-link text-red-glow {% if request.path.startswith('/latest-publications') %}active{% endif %}" href="{{ url_for('latest_publications') }}">
                                 📢 Latest Publications
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-red-glow" href="#">
-                                🎧 CPR Podcast Channel
+                            <a class="nav-link text-red-glow {% if request.path.startswith('/categorias') or request.path.startswith('/categoria/') %}active{% endif %}" href="{{ url_for('categories') }}">
+                                📂 Categorías
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-red-glow" href="#">
-                                🔒 Web 3.0 Security
+                            <a class="nav-link text-red-glow {% if request.path.startswith('/noticias') %}active{% endif %}" href="{{ url_for('news') }}">
+                                📰 Noticias
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-red-glow" href="#">
-                                📊 Intelligence Reports
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-red-glow" href="#">
-                                📚 Resources
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-red-glow" href="#">
-                                👥 About Us
+                            <a class="nav-link text-red-glow {% if request.path.startswith('/contacto') %}active{% endif %}" href="{{ url_for('contact') }}">
+                                ✉️ Contacto
                             </a>
                         </li>
                     </ul>
-                    
-                    <!-- Botón SUBSCRIBE -->
                     <ul class="navbar-nav ms-auto">
-                        <li class="nav-item">
-                            <a class="nav-link btn-red-solid" href="#">
-                                📧 SUBSCRIBE
-                            </a>
-                        </li>
-                        
                         {% if session.user %}
-                            <!-- Usuario autenticado -->
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle text-red-glow" href="#" role="button" data-bs-toggle="dropdown">
                                     👤 {{ session.user }}
@@ -78,7 +54,6 @@
                                 </ul>
                             </li>
                         {% else %}
-                            <!-- Usuario no autenticado -->
                             <li class="nav-item">
                                 <a class="nav-link btn-red-outline me-2" href="{{ url_for('login') }}">🔐 Iniciar Sesión</a>
                             </li>
@@ -92,9 +67,7 @@
         </nav>
     </header>
 
-    <!-- Contenido principal -->
     <main class="container my-4">
-        <!-- Mensajes flash -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
@@ -106,15 +79,13 @@
                 {% endfor %}
             {% endif %}
         {% endwith %}
-
         {% block content %}{% endblock %}
     </main>
 
-    <!-- Footer -->
     <footer class="bg-dark-custom text-red-glow text-center py-4 mt-5 border-top border-red-custom">
         <div class="container">
-            <p class="mb-0">🌙 <strong>Blog Oscuro</strong> - Donde las ideas brillan en la oscuridad ✨</p>
-            <small class="text-muted-red">© 2024 Todos los derechos reservados</small>
+            <p class="mb-0">🌙 <strong>Blog de Ciberseguridad</strong></p>
+            <small class="text-muted-red">© 2025 Todos los derechos reservados</small>
         </div>
     </footer>
 
