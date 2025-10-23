@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, flash, request, session, send_from_directory
+from flask import Flask, render_template, redirect, url_for, flash, request, session, send_from_directory, jsonify
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
 from wtforms import StringField, PasswordField, SubmitField, TextAreaField
@@ -11,13 +11,12 @@ from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 from PIL import Image
 from contextlib import contextmanager
-
-# --- NUEVO: Markdown + saneado ---
 import markdown as md
 import bleach
+import re
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = secrets.token_hex(16)
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'key-pruebas-local')
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 app.config['DATABASE'] = 'blog.db'
@@ -82,7 +81,6 @@ def save_image(image_file):
         return unique_filename
     return None
 
-# --- NUEVO: Conversor Markdown seguro ---
 MD_EXTENSIONS = [
     'extra',
     'fenced_code',
@@ -96,6 +94,7 @@ ALLOWED_TAGS = bleach.sanitizer.ALLOWED_TAGS.union({
     'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
     'table', 'thead', 'tbody', 'tr', 'th', 'td',
     'blockquote', 'ul', 'ol', 'li',
+    'img'
 })
 
 ALLOWED_ATTRS = {
@@ -106,10 +105,33 @@ ALLOWED_ATTRS = {
     'th': ['align'], 'td': ['align'],
 }
 
+def delete_image_file(filename):
+    if not filename:
+        return
+    default_images = {'default-bg.jpg', 'default-bg2.jpg', 'default-bg3.jpg'}
+    if filename in default_images:
+        return
+    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    if os.path.exists(filepath):
+        try:
+            os.remove(filepath)
+        except Exception as e:
+            print(f"Error al eliminar imagen {filename}: {e}")
+
+def extract_upload_filenames(text: str) -> set:
+    if not text:
+        return set()
+    names = set()
+    for m in re.findall(r'!\[[^\]]*\]\((/uploads/[^)\s]+)\)', text):
+        names.add(os.path.basename(m))
+    for m in re.findall(r'src=["\'](/uploads/[^"\']+)["\']', text, flags=re.IGNORECASE):
+        names.add(os.path.basename(m))
+    return names
+
 def render_markdown_safe(md_text: str) -> str:
     html = md.markdown(md_text or '', extensions=MD_EXTENSIONS, output_format='html5')
     clean = bleach.clean(html, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRS, strip=True)
-    clean = bleach.linkify(clean, callbacks=[bleach.linkifier.DEFAULT_CALLBACK])
+    clean = bleach.linkify(clean)
     return clean
 
 class LoginForm(FlaskForm):
@@ -135,6 +157,19 @@ class PostForm(FlaskForm):
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+@app.route('/admin/upload-inline-image', methods=['POST'])
+def upload_inline_image():
+    if 'user' not in session:
+        return jsonify({'error': 'No autorizado'}), 401
+    file = request.files.get('image')
+    if not file or not file.filename:
+        return jsonify({'error': 'No se envió ninguna imagen'}), 400
+    filename = save_image(file)
+    if not filename:
+        return jsonify({'error': 'No se pudo guardar la imagen'}), 500
+    file_url = url_for('uploaded_file', filename=filename)
+    return jsonify({'url': file_url}), 200
 
 @app.route('/')
 def home():
@@ -275,15 +310,12 @@ def view_post(post_id):
         if not post:
             flash('El post no existe', 'danger')
             return redirect(url_for('home'))
-
-        # --- NUEVO: convertir Markdown a HTML seguro ---
         content_html = render_markdown_safe(post['content'])
-
         post_dict = {
             'id': post['id'],
             'title': post['title'],
-            'content': post['content'],          # markdown crudo (útil si luego editas)
-            'content_html': content_html,        # HTML saneado para mostrar
+            'content': post['content'],
+            'content_html': content_html,
             'author': post['author'],
             'category': post['category'],
             'image': post['image'],
@@ -397,40 +429,52 @@ def edit_post(post_id):
         flash('Debes iniciar sesión para editar posts', 'warning')
         return redirect(url_for('login'))
     with get_db_connection() as conn:
-        post = conn.execute(
-            'SELECT * FROM posts WHERE id = ?', (post_id,)
-        ).fetchone()
+        post = conn.execute('SELECT * FROM posts WHERE id = ?', (post_id,)).fetchone()
         if not post:
             flash('El post no existe', 'danger')
             return redirect(url_for('dashboard'))
         if post['author'] != session['user']:
             flash('No tienes permisos para editar este post', 'danger')
             return redirect(url_for('dashboard'))
+
         form = PostForm()
+
         if form.validate_on_submit():
             update_data = {
                 'title': form.title.data,
                 'content': form.content.data,
                 'category': form.category.data
             }
+
+            old_image = post['image']
+            old_inline = extract_upload_filenames(post['content'])
+
             if form.image.data:
                 image_filename = save_image(form.image.data)
                 if image_filename:
                     update_data['image'] = image_filename
+                    delete_image_file(old_image)
+
             set_clause = ', '.join([f"{key} = ?" for key in update_data.keys()])
             values = list(update_data.values())
             values.append(post_id)
-            conn.execute(
-                f'UPDATE posts SET {set_clause} WHERE id = ?',
-                values
-            )
+
+            conn.execute(f'UPDATE posts SET {set_clause} WHERE id = ?', values)
             conn.commit()
+
+            new_inline = extract_upload_filenames(update_data['content'])
+            removed = old_inline - new_inline
+            for fn in removed:
+                delete_image_file(fn)
+
             flash('¡Post actualizado exitosamente!', 'success')
             return redirect(url_for('dashboard'))
+
         elif request.method == 'GET':
             form.title.data = post['title']
             form.content.data = post['content']
             form.category.data = post['category']
+
         post_dict = {
             'id': post['id'],
             'title': post['title'],
@@ -440,6 +484,7 @@ def edit_post(post_id):
             'image': post['image'],
             'date_created': post['date_created']
         }
+
     return render_template('edit_post.html', form=form, post=post_dict)
 
 @app.route('/admin/delete/<int:post_id>')
@@ -448,15 +493,16 @@ def delete_post(post_id):
         flash('Debes iniciar sesión para eliminar posts', 'warning')
         return redirect(url_for('login'))
     with get_db_connection() as conn:
-        post = conn.execute(
-            'SELECT * FROM posts WHERE id = ?', (post_id,)
-        ).fetchone()
+        post = conn.execute('SELECT * FROM posts WHERE id = ?', (post_id,)).fetchone()
         if not post:
             flash('El post no existe', 'danger')
             return redirect(url_for('dashboard'))
         if post['author'] != session['user']:
             flash('No tienes permisos para eliminar este post', 'danger')
             return redirect(url_for('dashboard'))
+        delete_image_file(post['image'])
+        for fn in extract_upload_filenames(post['content']):
+            delete_image_file(fn)
         conn.execute('DELETE FROM posts WHERE id = ?', (post_id,))
         conn.commit()
     flash('¡Post eliminado exitosamente!', 'success')

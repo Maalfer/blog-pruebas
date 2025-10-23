@@ -37,11 +37,11 @@
                         {% endif %}
                     </div>
                     
-                    <!-- Campo de imagen -->
+                    <!-- Campo de imagen de portada -->
                     <div class="mb-4">
                         <div class="form-image-upload">
                             {{ form.image.label(class="form-label fw-bold text-red-glow") }}
-                            {{ form.image(class="form-control", id="imageInput", onchange="previewImage(this)") }}
+                            {{ form.image(class="form-control", id="imageInput", onchange="previewHeaderImage(this)") }}
                             {% if form.image.errors %}
                                 <div class="text-danger mt-2">
                                     {% for error in form.image.errors %}
@@ -54,7 +54,6 @@
                             </div>
                         </div>
                         
-                        <!-- Imagen actual -->
                         {% if post.image %}
                         <div class="mt-3 text-center">
                             <p class="text-muted-red mb-2">🖼️ Imagen actual:</p>
@@ -64,9 +63,16 @@
                         {% endif %}
                     </div>
                     
-                    <!-- Campo de contenido con Markdown y vista previa -->
+                    <!-- Toolbar + Contenido con Markdown y vista previa -->
+                    <div class="mb-2 d-flex justify-content-between align-items-center">
+                        <label class="form-label fw-bold m-0">{{ form.content.label.text or 'Contenido' }}</label>
+                        <div class="d-flex gap-2">
+                            <button type="button" id="btn-insert-image" class="btn btn-outline-secondary btn-sm">📷 Insertar imagen</button>
+                            <input type="file" id="inlineImageInput" accept="image/*" style="display:none">
+                        </div>
+                    </div>
+
                     <div class="mb-3">
-                        {{ form.content.label(class="form-label fw-bold") }}
                         {{ form.content(class="form-control", id="contentInput", rows="12", placeholder="Edita tu contenido en Markdown... **negritas**, _itálicas_, `código`, ### títulos, etc.") }}
                         {% if form.content.errors %}
                             <div class="text-danger mt-2">
@@ -76,11 +82,10 @@
                             </div>
                         {% endif %}
                         <div class="form-text text-muted-red">
-                            ✨ Soporta formato <strong>Markdown</strong>: **negritas**, _itálicas_, `código`, listas, tablas y títulos.
+                            ✨ Soporta formato <strong>Markdown</strong> (incluye imágenes con <code>![alt](url)</code>).
                         </div>
                     </div>
 
-                    <!-- Vista previa en vivo -->
                     <div class="mb-3">
                         <label class="form-label fw-bold text-red-glow">Vista previa del contenido</label>
                         <div id="md-preview" class="card p-3" style="min-height: 150px; background: var(--dark-card); border: 1px solid var(--dark-border); color: var(--text-primary);"></div>
@@ -101,35 +106,62 @@
 <script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
 
 <script>
-function previewImage(input) {
-    const preview = document.getElementById('preview');
-    const imagePreview = document.getElementById('imagePreview');
-    
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        
-        reader.onload = function(e) {
-            preview.src = e.target.result;
-            imagePreview.style.display = 'block';
-        }
-        
-        reader.readAsDataURL(input.files[0]);
-    }
+function previewHeaderImage(input) {
+    // Solo preview si eliges nueva portada; no afecta a la imagen actual
+    // Mostramos una mini previsualización si quieres implementarla como en create_post
 }
 
-// Vista previa dinámica de Markdown
+function insertAtCursor(textarea, text) {
+    const start = textarea.selectionStart ?? textarea.value.length;
+    const end   = textarea.selectionEnd ?? textarea.value.length;
+    const before = textarea.value.substring(0, start);
+    const after  = textarea.value.substring(end, textarea.value.length);
+    textarea.value = before + text + after;
+    const pos = start + text.length;
+    textarea.selectionStart = textarea.selectionEnd = pos;
+    textarea.dispatchEvent(new Event('input'));
+}
+
 document.addEventListener('DOMContentLoaded', function(){
     const textarea = document.getElementById('contentInput');
-    const preview = document.getElementById('md-preview');
+    const preview  = document.getElementById('md-preview');
+    const btnImage = document.getElementById('btn-insert-image');
+    const fileInline = document.getElementById('inlineImageInput');
 
     function updatePreview(){
         const raw = textarea.value || '';
         const html = marked.parse(raw);
         preview.innerHTML = DOMPurify.sanitize(html);
     }
-
     textarea.addEventListener('input', updatePreview);
-    updatePreview(); // inicial
+    updatePreview();
+
+    btnImage.addEventListener('click', () => fileInline.click());
+    fileInline.addEventListener('change', async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const fd = new FormData();
+        fd.append('image', file);
+
+        try {
+            const res = await fetch('{{ url_for("upload_inline_image") }}', {
+                method: 'POST',
+                body: fd
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data?.error || 'Error subiendo imagen');
+
+            const url = data.url;
+            const alt = file.name.replace(/\.[^/.]+$/, '').slice(0, 60);
+            const snippet = `![${alt}](${url})`;
+            insertAtCursor(textarea, (textarea.value && !textarea.value.endsWith('\n') ? '\n' : '') + snippet + '\n');
+        } catch (err) {
+            alert('⚠️ ' + (err?.message || 'No se pudo subir la imagen'));
+        } finally {
+            fileInline.value = '';
+        }
+    });
 });
 </script>
 {% endblock %}
