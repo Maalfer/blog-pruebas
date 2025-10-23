@@ -6,53 +6,74 @@ from wtforms.validators import DataRequired, Length, EqualTo
 from datetime import datetime
 import secrets
 import os
+import sqlite3
 from werkzeug.utils import secure_filename
+from werkzeug.security import generate_password_hash, check_password_hash
 from PIL import Image
+from contextlib import contextmanager
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = secrets.token_hex(16)
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+app.config['DATABASE'] = 'blog.db'
 
-# Crear directorio de uploads si no existe
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-# Simulación de base de datos
-users = {}
-blog_posts = [
-    {
-        'id': 1,
-        'title': 'Bienvenido al Blog Oscuro',
-        'content': 'Este es el primer post de nuestro blog en la oscuridad. ¡Bienvenidos a las sombras!',
-        'author': 'admin',
-        'date_created': '2024-01-01',
-        'category': 'General',
-        'image': 'default-bg.jpg'
-    },
-    {
-        'id': 2,
-        'title': 'Cómo empezar con Flask en la Oscuridad',
-        'content': 'Flask es un microframework de Python muy poderoso para desarrollo web. Perfecto para temas oscuros.',
-        'author': 'admin',
-        'date_created': '2024-01-02',
-        'category': 'Tutorial',
-        'image': 'default-bg2.jpg'
-    }
-]
-next_post_id = 3
+@contextmanager
+def get_db_connection():
+    conn = sqlite3.connect(app.config['DATABASE'])
+    conn.row_factory = sqlite3.Row
+    try:
+        yield conn
+    finally:
+        conn.close()
 
-# Función para procesar y guardar imágenes
+def init_db():
+    with get_db_connection() as conn:
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT UNIQUE NOT NULL,
+                password_hash TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS posts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT NOT NULL,
+                content TEXT NOT NULL,
+                author TEXT NOT NULL,
+                category TEXT NOT NULL,
+                image TEXT NOT NULL,
+                date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (author) REFERENCES users (username)
+            )
+        ''')
+        
+        admin_exists = conn.execute(
+            'SELECT id FROM users WHERE username = ?', ('admin',)
+        ).fetchone()
+        
+        if not admin_exists:
+            password_hash = generate_password_hash('admin123')
+            conn.execute(
+                'INSERT INTO users (username, password_hash) VALUES (?, ?)',
+                ('admin', password_hash)
+            )
+        
+        conn.commit()
+
 def save_image(image_file):
     if image_file and image_file.filename:
-        # Generar nombre único para el archivo
         filename = secure_filename(image_file.filename)
         unique_filename = f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{filename}"
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
         
-        # Guardar imagen
         image_file.save(filepath)
         
-        # Optimizar imagen si es muy grande
         try:
             img = Image.open(filepath)
             if img.size[0] > 1200 or img.size[1] > 800:
@@ -64,7 +85,6 @@ def save_image(image_file):
         return unique_filename
     return None
 
-# Formularios
 class LoginForm(FlaskForm):
     username = StringField('Usuario', validators=[DataRequired()])
     password = PasswordField('Contraseña', validators=[DataRequired()])
@@ -86,25 +106,55 @@ class PostForm(FlaskForm):
     ])
     submit = SubmitField('Publicar Post')
 
-# Ruta para servir archivos upload
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
-# Rutas principales
 @app.route('/')
 def home():
-    return render_template('home.html', posts=blog_posts)
+    with get_db_connection() as conn:
+        posts = conn.execute('''
+            SELECT * FROM posts 
+            ORDER BY date_created DESC
+        ''').fetchall()
+        
+        posts_list = []
+        for post in posts:
+            posts_list.append({
+                'id': post['id'],
+                'title': post['title'],
+                'content': post['content'],
+                'author': post['author'],
+                'category': post['category'],
+                'image': post['image'],
+                'date_created': post['date_created']
+            })
+        
+        return render_template('home.html', posts=posts_list)
 
 @app.route('/post/<int:post_id>')
 def view_post(post_id):
-    post = next((p for p in blog_posts if p['id'] == post_id), None)
-    if not post:
-        flash('El post no existe', 'danger')
-        return redirect(url_for('home'))
-    return render_template('post.html', post=post)
+    with get_db_connection() as conn:
+        post = conn.execute(
+            'SELECT * FROM posts WHERE id = ?', (post_id,)
+        ).fetchone()
+        
+        if not post:
+            flash('El post no existe', 'danger')
+            return redirect(url_for('home'))
+        
+        post_dict = {
+            'id': post['id'],
+            'title': post['title'],
+            'content': post['content'],
+            'author': post['author'],
+            'category': post['category'],
+            'image': post['image'],
+            'date_created': post['date_created']
+        }
+        
+        return render_template('post.html', post=post_dict)
 
-# Rutas de autenticación
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
@@ -112,12 +162,18 @@ def login():
         username = form.username.data
         password = form.password.data
         
-        if username in users and users[username] == password:
-            session['user'] = username
-            flash('¡Sesión iniciada correctamente!', 'success')
-            return redirect(url_for('dashboard'))
-        else:
-            flash('Usuario o contraseña incorrectos', 'danger')
+        with get_db_connection() as conn:
+            user = conn.execute(
+                'SELECT * FROM users WHERE username = ?', (username,)
+            ).fetchone()
+            
+            if user and check_password_hash(user['password_hash'], password):
+                session['user'] = username
+                session['user_id'] = user['id']
+                flash('¡Sesión iniciada correctamente!', 'success')
+                return redirect(url_for('dashboard'))
+            else:
+                flash('Usuario o contraseña incorrectos', 'danger')
     
     return render_template('login.html', form=form)
 
@@ -128,12 +184,23 @@ def register():
         username = form.username.data
         password = form.password.data
         
-        if username in users:
-            flash('El usuario ya existe', 'danger')
-        else:
-            users[username] = password
-            flash('¡Registro exitoso! Ahora puedes iniciar sesión', 'success')
-            return redirect(url_for('login'))
+        with get_db_connection() as conn:
+            existing_user = conn.execute(
+                'SELECT id FROM users WHERE username = ?', (username,)
+            ).fetchone()
+            
+            if existing_user:
+                flash('El usuario ya existe', 'danger')
+            else:
+                password_hash = generate_password_hash(password)
+                conn.execute(
+                    'INSERT INTO users (username, password_hash) VALUES (?, ?)',
+                    (username, password_hash)
+                )
+                conn.commit()
+                
+                flash('¡Registro exitoso! Ahora puedes iniciar sesión', 'success')
+                return redirect(url_for('login'))
     
     return render_template('register.html', form=form)
 
@@ -143,16 +210,33 @@ def dashboard():
         flash('Debes iniciar sesión para acceder al dashboard', 'warning')
         return redirect(url_for('login'))
     
-    user_posts = [post for post in blog_posts if post['author'] == session['user']]
-    return render_template('dashboard.html', username=session['user'], posts=user_posts)
+    with get_db_connection() as conn:
+        user_posts = conn.execute(
+            'SELECT * FROM posts WHERE author = ? ORDER BY date_created DESC',
+            (session['user'],)
+        ).fetchall()
+        
+        posts_list = []
+        for post in user_posts:
+            posts_list.append({
+                'id': post['id'],
+                'title': post['title'],
+                'content': post['content'],
+                'author': post['author'],
+                'category': post['category'],
+                'image': post['image'],
+                'date_created': post['date_created']
+            })
+        
+        return render_template('dashboard.html', username=session['user'], posts=posts_list)
 
 @app.route('/logout')
 def logout():
     session.pop('user', None)
+    session.pop('user_id', None)
     flash('Sesión cerrada correctamente', 'info')
     return redirect(url_for('home'))
 
-# Rutas de administración de posts
 @app.route('/admin/create', methods=['GET', 'POST'])
 def create_post():
     if 'user' not in session:
@@ -161,27 +245,25 @@ def create_post():
     
     form = PostForm()
     if form.validate_on_submit():
-        global next_post_id
-        
-        # Procesar imagen
         image_filename = save_image(form.image.data)
         if not image_filename:
-            # Usar imagen por defecto si no se subió ninguna
             default_images = ['default-bg.jpg', 'default-bg2.jpg', 'default-bg3.jpg']
             import random
             image_filename = random.choice(default_images)
         
-        new_post = {
-            'id': next_post_id,
-            'title': form.title.data,
-            'content': form.content.data,
-            'author': session['user'],
-            'date_created': datetime.now().strftime('%Y-%m-%d'),
-            'category': form.category.data,
-            'image': image_filename
-        }
-        blog_posts.append(new_post)
-        next_post_id += 1
+        with get_db_connection() as conn:
+            conn.execute('''
+                INSERT INTO posts (title, content, author, category, image)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (
+                form.title.data,
+                form.content.data,
+                session['user'],
+                form.category.data,
+                image_filename
+            ))
+            conn.commit()
+        
         flash('¡Post creado exitosamente con imagen!', 'success')
         return redirect(url_for('dashboard'))
     
@@ -193,36 +275,61 @@ def edit_post(post_id):
         flash('Debes iniciar sesión para editar posts', 'warning')
         return redirect(url_for('login'))
     
-    post = next((p for p in blog_posts if p['id'] == post_id), None)
-    if not post:
-        flash('El post no existe', 'danger')
-        return redirect(url_for('dashboard'))
-    
-    if post['author'] != session['user']:
-        flash('No tienes permisos para editar este post', 'danger')
-        return redirect(url_for('dashboard'))
-    
-    form = PostForm()
-    if form.validate_on_submit():
-        # Procesar nueva imagen si se subió
-        if form.image.data:
-            image_filename = save_image(form.image.data)
-            if image_filename:
-                post['image'] = image_filename
+    with get_db_connection() as conn:
+        post = conn.execute(
+            'SELECT * FROM posts WHERE id = ?', (post_id,)
+        ).fetchone()
         
-        post['title'] = form.title.data
-        post['content'] = form.content.data
-        post['category'] = form.category.data
-        flash('¡Post actualizado exitosamente!', 'success')
-        return redirect(url_for('dashboard'))
+        if not post:
+            flash('El post no existe', 'danger')
+            return redirect(url_for('dashboard'))
+        
+        if post['author'] != session['user']:
+            flash('No tienes permisos para editar este post', 'danger')
+            return redirect(url_for('dashboard'))
+        
+        form = PostForm()
+        if form.validate_on_submit():
+            update_data = {
+                'title': form.title.data,
+                'content': form.content.data,
+                'category': form.category.data
+            }
+            
+            if form.image.data:
+                image_filename = save_image(form.image.data)
+                if image_filename:
+                    update_data['image'] = image_filename
+            
+            set_clause = ', '.join([f"{key} = ?" for key in update_data.keys()])
+            values = list(update_data.values())
+            values.append(post_id)
+            
+            conn.execute(
+                f'UPDATE posts SET {set_clause} WHERE id = ?',
+                values
+            )
+            conn.commit()
+            
+            flash('¡Post actualizado exitosamente!', 'success')
+            return redirect(url_for('dashboard'))
+        
+        elif request.method == 'GET':
+            form.title.data = post['title']
+            form.content.data = post['content']
+            form.category.data = post['category']
+        
+        post_dict = {
+            'id': post['id'],
+            'title': post['title'],
+            'content': post['content'],
+            'author': post['author'],
+            'category': post['category'],
+            'image': post['image'],
+            'date_created': post['date_created']
+        }
     
-    # Llenar el formulario con datos existentes
-    elif request.method == 'GET':
-        form.title.data = post['title']
-        form.content.data = post['content']
-        form.category.data = post['category']
-    
-    return render_template('edit_post.html', form=form, post=post)
+    return render_template('edit_post.html', form=form, post=post_dict)
 
 @app.route('/admin/delete/<int:post_id>')
 def delete_post(post_id):
@@ -230,18 +337,25 @@ def delete_post(post_id):
         flash('Debes iniciar sesión para eliminar posts', 'warning')
         return redirect(url_for('login'))
     
-    post = next((p for p in blog_posts if p['id'] == post_id), None)
-    if not post:
-        flash('El post no existe', 'danger')
-        return redirect(url_for('dashboard'))
+    with get_db_connection() as conn:
+        post = conn.execute(
+            'SELECT * FROM posts WHERE id = ?', (post_id,)
+        ).fetchone()
+        
+        if not post:
+            flash('El post no existe', 'danger')
+            return redirect(url_for('dashboard'))
+        
+        if post['author'] != session['user']:
+            flash('No tienes permisos para eliminar este post', 'danger')
+            return redirect(url_for('dashboard'))
+        
+        conn.execute('DELETE FROM posts WHERE id = ?', (post_id,))
+        conn.commit()
     
-    if post['author'] != session['user']:
-        flash('No tienes permisos para eliminar este post', 'danger')
-        return redirect(url_for('dashboard'))
-    
-    blog_posts.remove(post)
     flash('¡Post eliminado exitosamente!', 'success')
     return redirect(url_for('dashboard'))
 
 if __name__ == '__main__':
+    init_db()
     app.run(debug=True)
