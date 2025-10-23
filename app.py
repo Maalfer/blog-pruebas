@@ -12,6 +12,10 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from PIL import Image
 from contextlib import contextmanager
 
+# --- NUEVO: Markdown + saneado ---
+import markdown as md
+import bleach
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = secrets.token_hex(16)
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
@@ -77,6 +81,36 @@ def save_image(image_file):
             print(f"Error optimizando imagen: {e}")
         return unique_filename
     return None
+
+# --- NUEVO: Conversor Markdown seguro ---
+MD_EXTENSIONS = [
+    'extra',
+    'fenced_code',
+    'sane_lists',
+    'toc',
+    'tables',
+]
+
+ALLOWED_TAGS = bleach.sanitizer.ALLOWED_TAGS.union({
+    'p', 'pre', 'code', 'hr', 'br',
+    'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+    'table', 'thead', 'tbody', 'tr', 'th', 'td',
+    'blockquote', 'ul', 'ol', 'li',
+})
+
+ALLOWED_ATTRS = {
+    **bleach.sanitizer.ALLOWED_ATTRIBUTES,
+    'a': ['href', 'title', 'rel', 'target'],
+    'img': ['src', 'alt', 'title'],
+    'code': ['class'],
+    'th': ['align'], 'td': ['align'],
+}
+
+def render_markdown_safe(md_text: str) -> str:
+    html = md.markdown(md_text or '', extensions=MD_EXTENSIONS, output_format='html5')
+    clean = bleach.clean(html, tags=ALLOWED_TAGS, attributes=ALLOWED_ATTRS, strip=True)
+    clean = bleach.linkify(clean, callbacks=[bleach.linkifier.DEFAULT_CALLBACK])
+    return clean
 
 class LoginForm(FlaskForm):
     username = StringField('Usuario', validators=[DataRequired()])
@@ -241,10 +275,15 @@ def view_post(post_id):
         if not post:
             flash('El post no existe', 'danger')
             return redirect(url_for('home'))
+
+        # --- NUEVO: convertir Markdown a HTML seguro ---
+        content_html = render_markdown_safe(post['content'])
+
         post_dict = {
             'id': post['id'],
             'title': post['title'],
-            'content': post['content'],
+            'content': post['content'],          # markdown crudo (útil si luego editas)
+            'content_html': content_html,        # HTML saneado para mostrar
             'author': post['author'],
             'category': post['category'],
             'image': post['image'],

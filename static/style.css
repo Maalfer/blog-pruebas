@@ -691,6 +691,40 @@ button:focus-visible {
     border-color: var(--dark-border);
     opacity: 1;
 }
+
+
+.post-content h1, .post-content h2, .post-content h3 {
+  color: var(--red-primary);
+  margin-top: 1.2rem;
+  margin-bottom: .6rem;
+}
+.post-content p, .post-content li {
+  line-height: 1.75;
+}
+.post-content pre {
+  background: #0f172a;
+  border: 1px solid var(--dark-border);
+  padding: 1rem;
+  border-radius: .5rem;
+  overflow: auto;
+}
+.post-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+}
+.post-content th, .post-content td {
+  border: 1px solid var(--dark-border);
+  padding: .5rem .75rem;
+}
+.post-content blockquote {
+  border-left: 3px solid var(--red-primary);
+  padding-left: .75rem;
+  color: var(--text-secondary);
+  margin: 1rem 0;
+}
+
+
 @media (max-width: 768px) {
     .site-footer .footer-brand span { font-size: 1.1rem; }
 }

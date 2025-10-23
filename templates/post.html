@@ -32,8 +32,9 @@
                     </div>
                 </div>
                 
+                <!-- MEJORA: Render Markdown ya convertido y saneado desde el servidor -->
                 <div class="post-content">
-                    {{ post.content|replace('\n', '<br>')|safe }}
+                    {{ post.content_html|safe }}
                 </div>
             </div>
             <div class="card-footer">

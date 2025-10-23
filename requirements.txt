@@ -2,3 +2,6 @@ Flask
 Flask-WTF
 WTForms
 pillow
+markdown
+bleach
+
