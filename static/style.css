@@ -330,11 +330,10 @@ body.dark-theme {
     background: linear-gradient(135deg, var(--red-dark), var(--red-primary));
 }
 
-/* Estilos para posts con imágenes de fondo */
+/* Estilos para posts con im�genes de fondo */
 .post-card-with-image {
     position: relative;
     overflow: hidden;
-    min-height: 300px;
     background: linear-gradient(135deg, rgba(26, 26, 26, 0.9), rgba(42, 42, 42, 0.8));
 }
 
@@ -398,7 +397,7 @@ body.dark-theme {
     opacity: 1;
 }
 
-/* Mejoras para el texto sobre imágenes */
+/* Mejoras para el texto sobre im�genes */
 .post-card-with-image .card-title {
     color: #ffffff;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
@@ -462,7 +461,7 @@ body.dark-theme {
     border-radius: 12px;
 }
 
-/* Responsive para imágenes */
+/* Responsive para im�genes */
 @media (max-width: 768px) {
     .post-card-with-image {
         min-height: 250px;
@@ -473,7 +472,7 @@ body.dark-theme {
     }
 }
 
-/* Animación de carga para imágenes */
+/* Animaci�n de carga para im�genes */
 .image-loading {
     background: linear-gradient(90deg, var(--dark-border) 25%, var(--dark-card) 50%, var(--dark-border) 75%);
     background-size: 200% 100%;
@@ -483,6 +482,203 @@ body.dark-theme {
 @keyframes loading {
     0% { background-position: 200% 0; }
     100% { background-position: -200% 0; }
+}
+
+/* Nuevos estilos para layout de grid asim�trico */
+.post-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    grid-auto-rows: minmax(200px, auto);
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.post-item-large {
+    grid-column: span 8;
+    grid-row: span 2;
+    min-height: 400px;
+}
+
+.post-item-medium {
+    grid-column: span 6;
+    grid-row: span 1;
+    min-height: 250px;
+}
+
+.post-item-small {
+    grid-column: span 4;
+    grid-row: span 1;
+    min-height: 200px;
+}
+
+.post-item-tall {
+    grid-column: span 4;
+    grid-row: span 2;
+    min-height: 400px;
+}
+
+.post-item-wide {
+    grid-column: span 8;
+    grid-row: span 1;
+    min-height: 200px;
+}
+
+/* Estilos espec�ficos para diferentes tama�os de cards */
+.post-card-featured {
+    border-left: 6px solid var(--red-glow);
+}
+
+.post-card-featured .card-title {
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+}
+
+.post-card-standard .card-title {
+    font-size: 1.4rem;
+    margin-bottom: 0.8rem;
+}
+
+.post-card-compact .card-title {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+}
+
+.post-date {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+.post-author {
+    font-size: 0.9rem;
+    color: var(--red-glow);
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.post-excerpt {
+    line-height: 1.6;
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+}
+
+/* Patrones de grid para diferentes cantidades de posts */
+.grid-pattern-1 .post-item:nth-child(1) { grid-column: span 8; grid-row: span 2; }
+.grid-pattern-1 .post-item:nth-child(2) { grid-column: span 4; grid-row: span 1; }
+.grid-pattern-1 .post-item:nth-child(3) { grid-column: span 4; grid-row: span 1; }
+.grid-pattern-1 .post-item:nth-child(4) { grid-column: span 6; grid-row: span 1; }
+.grid-pattern-1 .post-item:nth-child(5) { grid-column: span 6; grid-row: span 1; }
+
+.grid-pattern-2 .post-item:nth-child(1) { grid-column: span 6; grid-row: span 2; }
+.grid-pattern-2 .post-item:nth-child(2) { grid-column: span 6; grid-row: span 1; }
+.grid-pattern-2 .post-item:nth-child(3) { grid-column: span 3; grid-row: span 1; }
+.grid-pattern-2 .post-item:nth-child(4) { grid-column: span 3; grid-row: span 1; }
+.grid-pattern-2 .post-item:nth-child(5) { grid-column: span 4; grid-row: span 1; }
+.grid-pattern-2 .post-item:nth-child(6) { grid-column: span 4; grid-row: span 1; }
+.grid-pattern-2 .post-item:nth-child(7) { grid-column: span 4; grid-row: span 1; }
+
+/* Responsive para grid */
+@media (max-width: 1200px) {
+    .post-item-large,
+    .post-item-wide {
+        grid-column: span 12;
+    }
+    
+    .post-item-medium {
+        grid-column: span 6;
+    }
+    
+    .post-item-small,
+    .post-item-tall {
+        grid-column: span 6;
+    }
+}
+
+@media (max-width: 768px) {
+    .post-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .post-item-large,
+    .post-item-medium,
+    .post-item-small,
+    .post-item-tall,
+    .post-item-wide {
+        grid-column: span 1;
+        grid-row: span 1;
+        min-height: 250px;
+    }
+    
+    .post-card-featured .card-title {
+        font-size: 1.4rem;
+    }
+    
+    .post-card-standard .card-title {
+        font-size: 1.2rem;
+    }
+    
+    .post-card-compact .card-title {
+        font-size: 1.1rem;
+    }
+}
+
+/* Mejoras para hover effects espec�ficos */
+.post-item-large:hover .card-background {
+    transform: scale(1.05);
+}
+
+.post-item-small:hover .card-background {
+    transform: scale(1.08);
+}
+
+/* Estilos para el layout de la captura */
+.capture-layout .post-item:nth-child(1) { 
+    grid-column: span 8; 
+    grid-row: span 2;
+    min-height: 450px;
+}
+
+.capture-layout .post-item:nth-child(2) { 
+    grid-column: span 4; 
+    grid-row: span 1;
+    min-height: 200px;
+}
+
+.capture-layout .post-item:nth-child(3) { 
+    grid-column: span 4; 
+    grid-row: span 1;
+    min-height: 200px;
+}
+
+.capture-layout .post-item:nth-child(4) { 
+    grid-column: span 6; 
+    grid-row: span 1;
+    min-height: 200px;
+}
+
+.capture-layout .post-item:nth-child(5) { 
+    grid-column: span 6; 
+    grid-row: span 1;
+    min-height: 200px;
+}
+
+.capture-layout .post-item:nth-child(6) { 
+    grid-column: span 4; 
+    grid-row: span 1;
+    min-height: 200px;
+}
+
+.capture-layout .post-item:nth-child(7) { 
+    grid-column: span 4; 
+    grid-row: span 1;
+    min-height: 200px;
+}
+
+.capture-layout .post-item:nth-child(8) { 
+    grid-column: span 4; 
+    grid-row: span 1;
+    min-height: 200px;
 }
 
 /* Responsive */
