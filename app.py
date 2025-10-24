@@ -15,11 +15,17 @@ import markdown as md
 import bleach
 import re
 
+try:
+    from apscheduler.schedulers.background import BackgroundScheduler
+except Exception:
+    BackgroundScheduler = None
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'key-pruebas-local')
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
 app.config['DATABASE'] = 'blog.db'
+app.config['CLEANUP_INTERVAL_MINUTES'] = int(os.environ.get('CLEANUP_INTERVAL_MINUTES', '5'))
 
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
@@ -112,7 +118,7 @@ def delete_image_file(filename):
     if filename in default_images:
         return
     filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-    if os.path.exists(filepath):
+    if os.path.abspath(filepath).startswith(os.path.abspath(app.config['UPLOAD_FOLDER'])) and os.path.exists(filepath):
         try:
             os.remove(filepath)
         except Exception as e:
@@ -122,10 +128,9 @@ def extract_upload_filenames(text: str) -> set:
     if not text:
         return set()
     names = set()
-    for m in re.findall(r'!\[[^\]]*\]\((/uploads/[^)\s]+)\)', text):
-        names.add(os.path.basename(m))
-    for m in re.findall(r'src=["\'](/uploads/[^"\']+)["\']', text, flags=re.IGNORECASE):
-        names.add(os.path.basename(m))
+    for m in re.findall(r'(?i)(?:https?://[^\s)"\'>]+)?(/uploads/[^\s)"\'>]+)', text):
+        p = m.split('?', 1)[0].split('#', 1)[0]
+        names.add(os.path.basename(p))
     return names
 
 def render_markdown_safe(md_text: str) -> str:
@@ -134,25 +139,41 @@ def render_markdown_safe(md_text: str) -> str:
     clean = bleach.linkify(clean)
     return clean
 
-class LoginForm(FlaskForm):
-    username = StringField('Usuario', validators=[DataRequired()])
-    password = PasswordField('Contraseña', validators=[DataRequired()])
-    submit = SubmitField('Iniciar Sesión')
+def is_image_used_elsewhere(conn, filename: str, exclude_post_id: int | None = None) -> bool:
+    like_pattern = f"%/uploads/{filename}%"
+    if exclude_post_id is None:
+        row = conn.execute("SELECT COUNT(*) AS c FROM posts WHERE content LIKE ?", (like_pattern,)).fetchone()
+    else:
+        row = conn.execute("SELECT COUNT(*) AS c FROM posts WHERE id <> ? AND content LIKE ?", (exclude_post_id, like_pattern)).fetchone()
+    return (row["c"] or 0) > 0
 
-class RegisterForm(FlaskForm):
-    username = StringField('Usuario', validators=[DataRequired(), Length(min=4, max=20)])
-    password = PasswordField('Contraseña', validators=[DataRequired(), Length(min=6)])
-    confirm_password = PasswordField('Confirmar Contraseña', validators=[DataRequired(), EqualTo('password')])
-    submit = SubmitField('Registrarse')
+def list_upload_filenames_on_disk() -> set:
+    try:
+        return {f for f in os.listdir(app.config['UPLOAD_FOLDER']) if os.path.isfile(os.path.join(app.config['UPLOAD_FOLDER'], f))}
+    except Exception:
+        return set()
 
-class PostForm(FlaskForm):
-    title = StringField('Título', validators=[DataRequired(), Length(max=100)])
-    content = TextAreaField('Contenido', validators=[DataRequired()])
-    category = StringField('Categoría', validators=[DataRequired(), Length(max=30)])
-    image = FileField('Imagen de Fondo', validators=[
-        FileAllowed(['jpg', 'jpeg', 'png', 'gif'], 'Solo imágenes permitidas!')
-    ])
-    submit = SubmitField('Publicar Post')
+def collect_used_upload_filenames(conn) -> set:
+    used = set()
+    rows = conn.execute("SELECT content, image FROM posts").fetchall()
+    for r in rows:
+        used |= extract_upload_filenames(r["content"] or "")
+        img = r["image"] or ""
+        if img and img not in {'default-bg.jpg', 'default-bg2.jpg', 'default-bg3.jpg'}:
+            used.add(img)
+    return used
+
+def cleanup_orphan_uploads() -> dict:
+    with get_db_connection() as conn:
+        used = collect_used_upload_filenames(conn)
+    disk = list_upload_filenames_on_disk()
+    protected = {'default-bg.jpg', 'default-bg2.jpg', 'default-bg3.jpg'}
+    deletable = {f for f in disk if f not in used and f not in protected}
+    deleted = []
+    for f in deletable:
+        delete_image_file(f)
+        deleted.append(f)
+    return {"checked": len(disk), "used": len(used), "deleted": deleted}
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
@@ -170,6 +191,31 @@ def upload_inline_image():
         return jsonify({'error': 'No se pudo guardar la imagen'}), 500
     file_url = url_for('uploaded_file', filename=filename)
     return jsonify({'url': file_url}), 200
+
+@app.route('/admin/delete-inline-image', methods=['POST'])
+def delete_inline_image():
+    if 'user' not in session:
+        return jsonify({'error': 'No autorizado'}), 401
+    data = request.get_json(silent=True) or {}
+    url = (data.get('url') or '').strip()
+    if not url.startswith('/uploads/'):
+        return jsonify({'error': 'URL inválida'}), 400
+    filename = os.path.basename(url)
+    with get_db_connection() as conn:
+        if is_image_used_elsewhere(conn, filename, exclude_post_id=None):
+            return jsonify({'skipped': True}), 200
+    delete_image_file(filename)
+    return jsonify({'deleted': True, 'filename': filename}), 200
+
+@app.route('/admin/cleanup-orphans', methods=['POST', 'GET'])
+def cleanup_orphans_endpoint():
+    if 'user' not in session:
+        return jsonify({'error': 'No autorizado'}), 401
+    result = cleanup_orphan_uploads()
+    if request.method == 'GET':
+        flash(f"Archivos eliminados: {len(result['deleted'])}", 'info')
+        return redirect(url_for('dashboard'))
+    return jsonify(result), 200
 
 @app.route('/')
 def home():
@@ -323,6 +369,26 @@ def view_post(post_id):
         }
         return render_template('post.html', post=post_dict)
 
+class LoginForm(FlaskForm):
+    username = StringField('Usuario', validators=[DataRequired()])
+    password = PasswordField('Contraseña', validators=[DataRequired()])
+    submit = SubmitField('Iniciar Sesión')
+
+class RegisterForm(FlaskForm):
+    username = StringField('Usuario', validators=[DataRequired(), Length(min=4, max=20)])
+    password = PasswordField('Contraseña', validators=[DataRequired(), Length(min=6)])
+    confirm_password = PasswordField('Confirmar Contraseña', validators=[DataRequired(), EqualTo('password')])
+    submit = SubmitField('Registrarse')
+
+class PostForm(FlaskForm):
+    title = StringField('Título', validators=[DataRequired(), Length(max=100)])
+    content = TextAreaField('Contenido', validators=[DataRequired()])
+    category = StringField('Categoría', validators=[DataRequired(), Length(max=30)])
+    image = FileField('Imagen de Fondo', validators=[
+        FileAllowed(['jpg', 'jpeg', 'png', 'gif'], 'Solo imágenes permitidas!')
+    ])
+    submit = SubmitField('Publicar Post')
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
@@ -436,45 +502,36 @@ def edit_post(post_id):
         if post['author'] != session['user']:
             flash('No tienes permisos para editar este post', 'danger')
             return redirect(url_for('dashboard'))
-
         form = PostForm()
-
         if form.validate_on_submit():
             update_data = {
                 'title': form.title.data,
                 'content': form.content.data,
                 'category': form.category.data
             }
-
             old_image = post['image']
             old_inline = extract_upload_filenames(post['content'])
-
             if form.image.data:
                 image_filename = save_image(form.image.data)
                 if image_filename:
                     update_data['image'] = image_filename
                     delete_image_file(old_image)
-
             set_clause = ', '.join([f"{key} = ?" for key in update_data.keys()])
             values = list(update_data.values())
             values.append(post_id)
-
             conn.execute(f'UPDATE posts SET {set_clause} WHERE id = ?', values)
             conn.commit()
-
             new_inline = extract_upload_filenames(update_data['content'])
             removed = old_inline - new_inline
             for fn in removed:
-                delete_image_file(fn)
-
+                if not is_image_used_elsewhere(conn, fn, exclude_post_id=post_id):
+                    delete_image_file(fn)
             flash('¡Post actualizado exitosamente!', 'success')
             return redirect(url_for('dashboard'))
-
         elif request.method == 'GET':
             form.title.data = post['title']
             form.content.data = post['content']
             form.category.data = post['category']
-
         post_dict = {
             'id': post['id'],
             'title': post['title'],
@@ -484,7 +541,6 @@ def edit_post(post_id):
             'image': post['image'],
             'date_created': post['date_created']
         }
-
     return render_template('edit_post.html', form=form, post=post_dict)
 
 @app.route('/admin/delete/<int:post_id>')
@@ -500,14 +556,25 @@ def delete_post(post_id):
         if post['author'] != session['user']:
             flash('No tienes permisos para eliminar este post', 'danger')
             return redirect(url_for('dashboard'))
+        inline_files = extract_upload_filenames(post['content'])
+        for fn in inline_files:
+            if not is_image_used_elsewhere(conn, fn, exclude_post_id=post_id):
+                delete_image_file(fn)
         delete_image_file(post['image'])
-        for fn in extract_upload_filenames(post['content']):
-            delete_image_file(fn)
         conn.execute('DELETE FROM posts WHERE id = ?', (post_id,))
         conn.commit()
     flash('¡Post eliminado exitosamente!', 'success')
     return redirect(url_for('dashboard'))
 
+def start_scheduler():
+    if BackgroundScheduler is None:
+        return
+    if os.environ.get('WERKZEUG_RUN_MAIN') == 'true' or not app.debug:
+        scheduler = BackgroundScheduler(daemon=True)
+        scheduler.add_job(func=cleanup_orphan_uploads, trigger='interval', minutes=app.config['CLEANUP_INTERVAL_MINUTES'], max_instances=1, coalesce=True)
+        scheduler.start()
+
 if __name__ == '__main__':
     init_db()
+    start_scheduler()
     app.run(debug=True)
